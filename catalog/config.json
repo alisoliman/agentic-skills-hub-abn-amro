@@ -1,0 +1,19 @@
+{
+  "customer": "ABN AMRO",
+  "eyebrow": "ABN AMRO · GitHub Innovation Series",
+  "title": "ABN AMRO Agentic Skills Hub",
+  "tagline": "Reusable agent skills for ABN AMRO engineering teams: find one, install it with one command, improve it together.",
+  "owner": "ABN AMRO Engineering",
+  "repo": "alisoliman/agentic-skills-hub-abn-amro",
+  "hubUrl": "https://agreeable-coast-002487e03.8.azurestaticapps.net",
+  "primaryCta": "Install a skill. Improve the hub. Repeat.",
+  "featuredSkill": "grilling",
+  "theme": {
+    "accent": "#00857a"
+  },
+  "agentSkills": [
+    "grilling",
+    "frontend-design",
+    "ship-it"
+  ]
+}
