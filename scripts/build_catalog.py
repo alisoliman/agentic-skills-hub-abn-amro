@@ -423,7 +423,8 @@ def load_local_skills(config: Mapping[str, Any]) -> list[dict[str, Any]]:
     agent_skills = set(agent_skill_names(config))
     skills: list[dict[str, Any]] = []
     for skill_file in sorted(SKILLS_DIR.glob("*/SKILL.md")):
-        text = read_text(skill_file)
+        with skill_file.open(encoding="utf-8", newline="") as file:
+            text = file.read()
         metadata = parse_frontmatter(text, skill_file)
         _, body = split_frontmatter(text, skill_file)
         folder = skill_file.parent.name
@@ -438,6 +439,9 @@ def load_local_skills(config: Mapping[str, Any]) -> list[dict[str, Any]]:
                 "name": name,
                 "title": display.get("title") or metadata.get("title") or name.replace("-", " ").title(),
                 "description": display.get("description") or str(metadata["description"]),
+                "whenToUse": display.get("whenToUse") or str(metadata["description"]),
+                "markdown": text,
+                "markdownBody": body,
                 "license": display.get("license") or metadata.get("license") or "Unspecified",
                 "source": display.get("source") or metadata.get("source") or "local",
                 "kind": "local",
@@ -471,6 +475,7 @@ def load_external_skills() -> list[dict[str, Any]]:
                 "name": item["name"],
                 "title": item["title"],
                 "description": item["description"],
+                "whenToUse": item.get("whenToUse") or item["description"],
                 "license": item.get("license", "See source"),
                 "source": item.get("source") or item["package"],
                 "kind": "external",

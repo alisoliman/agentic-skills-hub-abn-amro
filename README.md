@@ -28,7 +28,7 @@ npm test        # Python and Node tests
 npm start       # build, then serve the site on http://127.0.0.1:8000
 ```
 
-The npm scripts find Python for you (`python3`, `python` or the Windows `py -3` launcher). `npm start` listens on 127.0.0.1 only and, like production, serves unknown paths without a file extension with `index.html`, so path-based routes work locally. If port 8000 is busy, run `python3 scripts/serve.py --port 8001` (Windows: `py -3 scripts/serve.py --port 8001`).
+The npm scripts find Python for you (`python3`, `python` or the Windows `py -3` launcher). `npm start` listens on 127.0.0.1 only and, like production, serves unknown paths without a file extension with `index.html`, so path-based routes work locally. Skill cards link to shareable `/skills/<name>` pages; local pages show formatted instructions and the complete raw file, while external pages link to their source. The formatted view uses the vendored MIT-licensed markdown-it library with HTML disabled. If port 8000 is busy, run `python3 scripts/serve.py --port 8001` (Windows: `py -3 scripts/serve.py --port 8001`).
 
 For live reload while editing, install [uv](https://docs.astral.sh/uv/) and run `npm run dev` (it serves on http://127.0.0.1:8000 and rebuilds when skills or catalog files change).
 
@@ -100,7 +100,7 @@ The GitHub CLI skill commands are in preview: `gh skill preview <owner/repo> <sk
    Step-by-step instructions for the agent.
    ```
 
-2. Optionally add a display title, description, tags, source and license in `catalog/local-skills.json`.
+2. Add a curated `whenToUse` explanation and optionally a display title, description, tags, source and license in `catalog/local-skills.json`. External recommendations use the same `whenToUse` field in `catalog/external-skills.json`.
 3. To let Copilot use it in this repository, add its name to `agentSkills` in `catalog/config.json`.
 4. Run `npm run build` and `npm test`.
 

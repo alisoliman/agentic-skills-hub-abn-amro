@@ -15,6 +15,7 @@ function filterCards(filters) {
   const count = { textContent: "" };
   const empty = { hidden: true };
   const context = vm.createContext({
+    window: { location: { pathname: "/" } },
     document: {
       querySelector(selector) {
         return { "#result-count": count, "#empty-state": empty }[selector];
