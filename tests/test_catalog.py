@@ -76,8 +76,10 @@ class CatalogTests(unittest.TestCase):
             with self.subTest(skill=skill["name"]):
                 self.assertEqual(skill["kind"], "local")
                 self.assertTrue(skill["description"])
+                self.assertTrue(skill["whenToUse"])
                 self.assertTrue(skill["url"].startswith(prefix))
                 source = catalog.ROOT / skill["url"][len(prefix):]
+                self.assertEqual(skill["content"], (source / "SKILL.md").read_bytes().decode("utf-8"))
                 metadata = catalog.parse_frontmatter(
                     (source / "SKILL.md").read_text(encoding="utf-8"), source / "SKILL.md"
                 )
@@ -144,6 +146,8 @@ class CatalogTests(unittest.TestCase):
             self.assertEqual(skill["kind"], "external")
             self.assertEqual(urlparse(skill["url"]).scheme, "https")
             self.assertTrue(skill["installCommand"].startswith("gh skill install "))
+            self.assertTrue(skill["whenToUse"])
+            self.assertNotIn("content", skill)
             self.assertNotIn("installs", skill)
         with tempfile.TemporaryDirectory() as directory:
             root = Path(directory)

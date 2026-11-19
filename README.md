@@ -8,7 +8,7 @@ Everything here is demo content. It is not an official registry, package index o
 
 | Path | What it is |
 | --- | --- |
-| `site/` | The static site: `index.html`, `styles.css` and `app.js` (vanilla JavaScript, no build step) |
+| `site/` | The static site: HTML, CSS and vanilla JavaScript (no bundler) |
 | `scripts/build_catalog.py` | Generates `site/hub.json` from the skills and catalog files (Python standard library) |
 | `skills/<name>/` | The canonical skills, each with a `SKILL.md` and its supporting files |
 | `.github/skills/<name>/` | Copies of the agent skills Copilot uses in this repository, refreshed by the build |
@@ -75,6 +75,8 @@ gh workflow run deploy.yml
 | `microsoft-foundry` | No, catalog only | Microsoft, MIT. Reference content: using it needs Azure access and the Azure MCP tools. |
 
 External entries in `catalog/external-skills.json` are recommendations, not installed or verified integrations.
+Every card links to a shareable `/skills/<name>` page. Local pages show the hub's
+complete skill file in rendered and raw views; external pages link to their source.
 
 ### Install a skill from this hub
 
@@ -100,7 +102,7 @@ The GitHub CLI skill commands are in preview: `gh skill preview <owner/repo> <sk
    Step-by-step instructions for the agent.
    ```
 
-2. Optionally add a display title, description, tags, source and license in `catalog/local-skills.json`.
+2. Add a curated `whenToUse` description and, where known, `upstreamUrl` in `catalog/local-skills.json`; display title, description, tags, source and license can also be set there. External entries provide `whenToUse` in `catalog/external-skills.json`.
 3. To let Copilot use it in this repository, add its name to `agentSkills` in `catalog/config.json`.
 4. Run `npm run build` and `npm test`.
 
