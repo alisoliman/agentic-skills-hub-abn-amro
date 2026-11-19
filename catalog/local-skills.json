@@ -1,24 +1,30 @@
 {
   "grilling": {
     "description": "Stress-test a plan one question at a time. Explore facts, resolve decisions with the user, and wait for shared understanding before acting.",
+    "whenToUse": "Use when a plan or idea needs its assumptions and decisions tested before implementation.",
     "license": "MIT",
     "source": "mattpocock/skills",
+    "upstreamUrl": "https://github.com/mattpocock/skills",
     "tags": ["requirements", "planning", "demo"]
   },
   "frontend-design": {
     "description": "Design and implement distinctive, polished interfaces. Use it to improve a working page's typography, layout, color, and visual hierarchy.",
+    "whenToUse": "Use when explicitly requesting frontend design or a more distinctive visual interface.",
     "license": "Apache-2.0",
     "source": "anthropics/skills",
+    "upstreamUrl": "https://github.com/anthropics/skills/tree/main/skills/frontend-design",
     "tags": ["design", "frontend", "demo"]
   },
   "ship-it": {
     "description": "Ship the current change for review: run the tests, commit to a feature branch, open or update the pull request, and wait for its live preview URL.",
+    "whenToUse": "Use when a finished change is ready for a pull request and a live review preview.",
     "license": "MIT",
     "source": "this hub",
     "tags": ["github", "deploy", "workflow", "demo"]
   },
   "microsoft-foundry": {
     "description": "Deploy, evaluate, and manage Microsoft Foundry agents. Reference content only for this demo; using it requires Azure access and the Azure MCP tools.",
+    "whenToUse": "Use as a reference for Microsoft Foundry agent deployment, evaluation, and troubleshooting when the required Azure tools are available.",
     "source": "Microsoft",
     "tags": ["azure", "agents", "reference"]
   }

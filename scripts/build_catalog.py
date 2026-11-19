@@ -423,7 +423,7 @@ def load_local_skills(config: Mapping[str, Any]) -> list[dict[str, Any]]:
     agent_skills = set(agent_skill_names(config))
     skills: list[dict[str, Any]] = []
     for skill_file in sorted(SKILLS_DIR.glob("*/SKILL.md")):
-        text = read_text(skill_file)
+        text = skill_file.read_bytes().decode("utf-8")
         metadata = parse_frontmatter(text, skill_file)
         _, body = split_frontmatter(text, skill_file)
         folder = skill_file.parent.name
@@ -438,8 +438,11 @@ def load_local_skills(config: Mapping[str, Any]) -> list[dict[str, Any]]:
                 "name": name,
                 "title": display.get("title") or metadata.get("title") or name.replace("-", " ").title(),
                 "description": display.get("description") or str(metadata["description"]),
+                "whenToUse": display.get("whenToUse") or str(metadata["description"]),
                 "license": display.get("license") or metadata.get("license") or "Unspecified",
                 "source": display.get("source") or metadata.get("source") or "local",
+                "upstreamUrl": display.get("upstreamUrl") or "",
+                "content": text,
                 "kind": "local",
                 "agentSkill": name in agent_skills,
                 "tags": normalize_tags(display.get("tags", metadata.get("tags"))),
@@ -463,7 +466,7 @@ def load_external_skills() -> list[dict[str, Any]]:
     items = json.loads(read_text(source_path))
     skills: list[dict[str, Any]] = []
     for item in items:
-        for required in ("name", "title", "description", "package", "url"):
+        for required in ("name", "title", "description", "package", "url", "whenToUse"):
             if not item.get(required):
                 raise ValueError(f"{source_path}: external entry missing {required}")
         skills.append(
@@ -471,6 +474,7 @@ def load_external_skills() -> list[dict[str, Any]]:
                 "name": item["name"],
                 "title": item["title"],
                 "description": item["description"],
+                "whenToUse": item["whenToUse"],
                 "license": item.get("license", "See source"),
                 "source": item.get("source") or item["package"],
                 "kind": "external",
@@ -522,6 +526,9 @@ def build_hub(config: Mapping[str, Any], environ: Optional[Mapping[str, str]] = 
         key=lambda item: (0 if item["kind"] == "local" else 1, item["title"].lower()),
     )
     names = [skill["name"] for skill in skills]
+    invalid = [name for name in names if not isinstance(name, str) or not NAME_PATTERN.fullmatch(name)]
+    if invalid:
+        raise ValueError(f"Skill names must be lowercase hyphenated URL names: {invalid}")
     duplicates = sorted({name for name in names if names.count(name) > 1})
     if duplicates:
         raise ValueError(f"Skill names must be unique across the catalog: {', '.join(duplicates)}")

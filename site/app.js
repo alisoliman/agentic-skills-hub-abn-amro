@@ -31,6 +31,12 @@ async function bootstrap() {
 }
 
 function renderError(err) {
+  if (isDetailRoute()) {
+    showDetailShell();
+    const main = document.querySelector("#catalog");
+    main.append(el("p", { class: "empty-state", role: "alert" }, `Couldn't load catalog data (${err.message}). Run \`npm run build\`.`));
+    return;
+  }
   const grid = document.querySelector("#skills-grid");
   if (grid) grid.replaceChildren();
   const empty = document.querySelector("#empty-state");
@@ -45,10 +51,14 @@ function renderAll() {
   applyTheme(state.config.theme);
   renderHero();
   renderBuildBadge();
+  renderFooter();
+  if (isDetailRoute()) {
+    renderDetail();
+    return;
+  }
   renderSignal();
   renderTagCloud();
   renderCards();
-  renderFooter();
   applyFilters();
 }
 
@@ -153,7 +163,9 @@ function createCard(skill, idx) {
   );
   card.append(topline);
 
-  card.append(el("h3", {}, skill.title));
+  const heading = el("h3");
+  heading.append(el("a", { href: `/skills/${encodeURIComponent(skill.name)}` }, skill.title));
+  card.append(heading);
   card.append(el("p", { class: "description" }, skill.description));
 
   const tags = el("div", { class: "tags" });
@@ -292,6 +304,7 @@ function applyFilters() {
 
 function wireStaticEvents() {
   const search = document.querySelector("#search");
+  if (!search) return;
   search.addEventListener("input", (e) => {
     state.query = e.target.value;
     applyFilters();
@@ -305,6 +318,91 @@ function wireStaticEvents() {
       search.focus();
     }
   });
+}
+
+function isDetailRoute() {
+  return /^\/skills(?:\/|$)/.test(window.location.pathname);
+}
+
+function showDetailShell() {
+  const hero = document.querySelector(".hero");
+  hero.querySelector(".signal-panel")?.remove();
+  hero.querySelector(".hero-actions")?.remove();
+  hero.classList.add("detail-hero");
+  const main = document.querySelector("#catalog");
+  main.replaceChildren();
+}
+
+function renderDetail() {
+  const match = window.location.pathname.match(/^\/skills\/([a-z0-9]+(?:-[a-z0-9]+)*)\/?$/);
+  const skill = match && state.skills.find((item) => item.name === match[1]);
+  showDetailShell();
+  const main = document.querySelector("#catalog");
+  main.classList.add("detail-shell");
+  main.append(el("a", { href: "/" }, "← Back to all skills"));
+  if (!skill) {
+    setText("#hub-title", "Skill not found");
+    setText("#hub-tagline", "This skill is not in the catalog.");
+    document.title = `Skill not found · ${state.config.title}`;
+    return;
+  }
+
+  setText("#hub-title", skill.title);
+  setText("#hub-tagline", `${skill.kind} skill · ${skill.license}`);
+  document.title = `${skill.title} · ${state.config.title}`;
+  const summary = el("section", { class: "detail-summary", "aria-label": "Skill overview" });
+  summary.append(el("h2", {}, "What it does"), el("p", {}, skill.description));
+  summary.append(el("h2", {}, "When to use it"), el("p", {}, skill.whenToUse));
+  summary.append(el("h2", {}, "Provenance"));
+  if (skill.kind === "local") {
+    const ref = state.build && state.build.sha ? state.build.sha : "main";
+    const fileUrl = `https://github.com/${state.config.repo}/blob/${ref}/skills/${skill.name}/SKILL.md`;
+    const provenance = el("p");
+    provenance.append(el("a", { href: fileUrl, rel: "noreferrer" }, "View this hub's SKILL.md"));
+    summary.append(provenance);
+    const upstream = el("p", {}, "Upstream: ");
+    upstream.append(skill.upstreamUrl
+      ? el("a", { href: skill.upstreamUrl, rel: "noreferrer" }, skill.source)
+      : el("span", {}, skill.source));
+    summary.append(upstream);
+  } else {
+    const source = el("p", {}, `Source: ${skill.source} · `);
+    source.append(el("a", { href: skill.url, rel: "noreferrer" }, "View external source"));
+    summary.append(source);
+  }
+  const install = el("div", { class: "install-row" });
+  install.append(el("code", {}, skill.installCommand));
+  const copy = el("button", { class: "copy-button", type: "button", "aria-label": `Copy install command for ${skill.title}` }, "Copy");
+  copy.dataset.command = skill.installCommand;
+  copy.addEventListener("click", () => copyInstall(copy));
+  install.append(copy);
+  summary.append(install);
+  main.append(summary);
+  if (skill.kind !== "local") return;
+
+  const section = el("section", { class: "detail-instructions", "aria-label": "Skill instructions" });
+  section.append(el("h2", {}, "SKILL.md"));
+  const controls = el("div", { class: "filter-row", role: "group", "aria-label": "File view" });
+  const renderedButton = el("button", { class: "filter active", type: "button", "aria-pressed": "true" }, "Rendered");
+  const rawButton = el("button", { class: "filter", type: "button", "aria-pressed": "false" }, "Raw");
+  controls.append(renderedButton, rawButton);
+  const rendered = el("div", { class: "markdown-body" });
+  const ref = state.build && state.build.sha ? state.build.sha : "main";
+  renderMarkdown(rendered, skill.content, `https://github.com/${state.config.repo}/blob/${ref}/skills/${skill.name}/SKILL.md`);
+  const raw = el("pre", { class: "raw-file", hidden: "" });
+  raw.append(el("code", {}, skill.content));
+  function setView(showRaw) {
+    raw.hidden = !showRaw;
+    rendered.hidden = showRaw;
+    renderedButton.classList.toggle("active", !showRaw);
+    rawButton.classList.toggle("active", showRaw);
+    renderedButton.setAttribute("aria-pressed", String(!showRaw));
+    rawButton.setAttribute("aria-pressed", String(showRaw));
+  }
+  renderedButton.addEventListener("click", () => setView(false));
+  rawButton.addEventListener("click", () => setView(true));
+  section.append(controls, rendered, raw);
+  main.append(section);
 }
 
 bootstrap();
