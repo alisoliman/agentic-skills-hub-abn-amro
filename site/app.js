@@ -16,6 +16,16 @@ const state = {
 };
 
 async function bootstrap() {
+  const isDetail = window.location.pathname !== "/";
+  if (isDetail) {
+    document.querySelector("#catalog-header").hidden = true;
+    document.querySelector("#catalog").hidden = true;
+    document.querySelector("#detail-header").hidden = false;
+    document.querySelector("#detail-header").append(document.querySelector("#build-badge"));
+    document.querySelector("#detail").hidden = false;
+    setAttr("#skip-link", "href", "#detail");
+    setText("#skip-link", "Skip to the skill");
+  }
   try {
     const res = await fetch(HUB_DATA_URL, { cache: "no-store" });
     if (!res.ok) throw new Error(`HTTP ${res.status}`);
@@ -23,10 +33,22 @@ async function bootstrap() {
     state.config = data.config;
     state.build = data.build || null;
     state.skills = data.skills;
-    renderAll();
-    wireStaticEvents();
+    if (isDetail) {
+      applyTheme(state.config.theme);
+      renderBuildBadge();
+      renderFooter();
+      setAttr("#repo-link", "href", `https://github.com/${state.config.repo}`);
+      renderDetail(window.location.pathname);
+    } else {
+      renderAll();
+      wireStaticEvents();
+    }
   } catch (err) {
-    renderError(err);
+    if (isDetail) {
+      document.querySelector("#detail-status").hidden = false;
+      document.querySelector("#detail-content").hidden = true;
+      setText("#detail-status", `Couldn't load skill data (${err.message}). Run \`npm run build\`.`);
+    } else renderError(err);
   }
 }
 
@@ -90,9 +112,9 @@ function renderBuildBadge() {
   const badge = document.querySelector("#build-badge");
   if (!badge) return;
   const build = state.build || { env: "local", label: "Local build" };
+  const href = buildLink(build, state.config.repo);
   badge.textContent = build.label || "Local build";
   badge.dataset.env = build.env || "local";
-  const href = buildLink(build, state.config.repo);
   if (href) {
     badge.setAttribute("href", href);
     badge.setAttribute("title", `Built from commit ${build.sha}`);
@@ -100,6 +122,61 @@ function renderBuildBadge() {
     badge.removeAttribute("href");
     badge.setAttribute("title", "Built on this machine");
   }
+}
+
+function detailPath(skill) {
+  return `/skills/${encodeURIComponent(skill.name)}`;
+}
+
+function skillForPath(path, skills) {
+  return skills.find((skill) => path === detailPath(skill) || path === `${detailPath(skill)}/`);
+}
+
+function renderDetail(path) {
+  const skill = skillForPath(path, state.skills);
+  if (!skill) {
+    document.title = `Skill not found · ${state.config.title}`;
+    setText("#detail-status", "Skill not found. Return to the catalog to browse available skills.");
+    return;
+  }
+  document.title = `${skill.title} · ${state.config.title}`;
+  setText("#detail-kind", `${skill.kind} skill`);
+  setText("#detail-title", skill.title);
+  setText("#detail-description", skill.description);
+  setText("#detail-when", skill.whenToUse);
+  setText("#detail-source", skill.source);
+  setAttr("#detail-source", "href", skill.url);
+  document.querySelector("#detail-status").hidden = true;
+  document.querySelector("#detail-content").hidden = false;
+  if (skill.kind !== "local") return;
+
+  const instructions = document.querySelector("#detail-instructions");
+  const formatted = document.querySelector("#markdown-content");
+  const raw = document.querySelector("#raw-content");
+  const formattedButton = document.querySelector("#view-formatted");
+  const rawButton = document.querySelector("#view-raw");
+  if (typeof skill.markdown !== "string" || typeof skill.markdownBody !== "string") {
+    throw new Error("Local skill instructions are missing from the catalog");
+  }
+  // HTML is disabled; markdown-it also rejects unsafe link protocols.
+  formatted.innerHTML = window.markdownit({ html: false }).render(skill.markdownBody);
+  const sourceBase = `${skill.url.replace("/tree/", "/blob/")}/`;
+  formatted.querySelectorAll("a[href]").forEach((link) => {
+    const href = link.getAttribute("href");
+    if (!href.startsWith("#")) link.href = new URL(href, sourceBase).href;
+  });
+  raw.textContent = skill.markdown;
+  instructions.hidden = false;
+  const setView = (showRaw) => {
+    raw.hidden = !showRaw;
+    formatted.hidden = showRaw;
+    rawButton.classList.toggle("active", showRaw);
+    formattedButton.classList.toggle("active", !showRaw);
+    rawButton.setAttribute("aria-pressed", String(showRaw));
+    formattedButton.setAttribute("aria-pressed", String(!showRaw));
+  };
+  formattedButton.addEventListener("click", () => setView(false));
+  rawButton.addEventListener("click", () => setView(true));
 }
 
 function renderSignal() {
@@ -175,6 +252,7 @@ function createCard(skill, idx) {
   card.append(installRow);
 
   const footer = el("div", { class: "card-footer" });
+  footer.append(el("a", { href: detailPath(skill) }, "View details"));
   footer.append(el("a", { href: skill.url, rel: "noreferrer" }, "Source"));
   if (skill.source) footer.append(el("span", { class: "source-name" }, skill.source));
   card.append(footer);

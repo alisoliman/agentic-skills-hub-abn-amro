@@ -152,6 +152,23 @@ class CatalogTests(unittest.TestCase):
                 with self.assertRaisesRegex(ValueError, "external entry missing title"):
                     catalog.load_external_skills()
 
+    def test_detail_data_includes_curated_guidance_and_only_local_file_content(self):
+        skills = catalog.build_hub(self.config)["skills"]
+        for skill in skills:
+            with self.subTest(skill=skill["name"]):
+                self.assertTrue(skill["description"])
+                self.assertTrue(skill["whenToUse"])
+                self.assertNotEqual(skill["whenToUse"], skill["description"])
+                if skill["kind"] == "local":
+                    path = catalog.SKILLS_DIR / skill["name"] / "SKILL.md"
+                    with path.open(encoding="utf-8", newline="") as file:
+                        self.assertEqual(skill["markdown"], file.read())
+                    self.assertTrue(skill["markdown"].startswith("---\n"))
+                    self.assertEqual(skill["markdownBody"], catalog.split_frontmatter(skill["markdown"], path)[1])
+                else:
+                    self.assertNotIn("markdown", skill)
+                    self.assertNotIn("markdownBody", skill)
+
     def test_external_install_command_uses_package_and_skill(self):
         item = {"name": "git-commit", "package": "github/awesome-copilot", "skill": "git-commit"}
         self.assertEqual(
@@ -312,6 +329,8 @@ class SiteTests(unittest.TestCase):
             parsed = urlparse(link)
             if parsed.scheme:
                 self.assertEqual(parsed.scheme, "https")
+            elif parsed.path == "/":
+                self.assertTrue((catalog.SITE_DIR / "index.html").is_file())
             elif parsed.path:
                 self.assertTrue(parsed.path.startswith("/"), f"use a root-absolute path: {link}")
                 self.assertTrue((catalog.SITE_DIR / unquote(parsed.path).lstrip("/")).is_file(), link)

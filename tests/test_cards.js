@@ -38,6 +38,7 @@ class Element {
 function loadApp() {
   const elements = {};
   const context = vm.createContext({
+    window: { location: { pathname: "/" } },
     document: {
       createElement: (tag) => new Element(tag),
       querySelector: (selector) => elements[selector] || null,

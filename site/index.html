@@ -10,8 +10,8 @@
   <link rel="stylesheet" href="/styles.css">
 </head>
 <body>
-  <a class="skip-link" href="#catalog">Skip to the catalog</a>
-  <header class="hero">
+  <a class="skip-link" id="skip-link" href="#catalog">Skip to the catalog</a>
+  <header class="hero" id="catalog-header">
     <div class="hero-copy">
       <div class="hero-meta">
         <p class="eyebrow" id="hub-eyebrow">GitHub Innovation Series · Agentic Skills</p>
@@ -34,6 +34,10 @@
         <div><dt>Owner</dt><dd id="signal-owner">–</dd></div>
       </dl>
     </aside>
+  </header>
+
+  <header class="detail-header" id="detail-header" hidden>
+    <a href="/">← All skills</a>
   </header>
 
   <main id="catalog" class="catalog-shell">
@@ -68,11 +72,32 @@
     </p>
   </main>
 
+  <main id="detail" class="detail-shell" hidden>
+    <p id="detail-status" role="status">Loading skill…</p>
+    <article id="detail-content" hidden>
+      <p class="eyebrow" id="detail-kind"></p>
+      <h1 id="detail-title"></h1>
+      <section><h2>What it does</h2><p id="detail-description"></p></section>
+      <section><h2>When to use it</h2><p id="detail-when"></p></section>
+      <section><h2>Source</h2><p><a id="detail-source" rel="noreferrer"></a></p></section>
+      <section id="detail-instructions" hidden>
+        <h2>Skill instructions</h2>
+        <div class="detail-switch" role="group" aria-label="Instruction view">
+          <button type="button" class="filter active" id="view-formatted" aria-pressed="true">Formatted</button>
+          <button type="button" class="filter" id="view-raw" aria-pressed="false">Raw</button>
+        </div>
+        <div id="markdown-content" class="markdown-content"></div>
+        <pre id="raw-content" class="raw-content" hidden></pre>
+      </section>
+    </article>
+  </main>
+
   <footer class="footer">
     <p id="hub-notice">Demo content for a GitHub Innovation Series session.</p>
     <p class="footer-meta">Generated from <code>skills/*/SKILL.md</code> and <code>catalog/*.json</code> · <a id="repo-link" href="https://github.com/alisoliman/agentic-skills-hub-abn-amro" rel="noreferrer">View repository</a></p>
   </footer>
 
+  <script src="/vendor/markdown-it.min.js"></script>
   <script src="/app.js"></script>
 </body>
 </html>
